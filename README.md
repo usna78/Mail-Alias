@@ -37,7 +37,9 @@ I'll explain how this Perl code works. It's a module designed to handle email al
 Note: This example assumes the configuration file is in YAML format. However, any format
 that can be loaded as a hash reference is permissible. The format your script or application
 uses is up to you. YAML is one excellent choice because it is easy to read and edit.
+
 ...
+
 bill: Bill.Williams@somecompany.com
 mary: Mary@example.com
 tech_team:
