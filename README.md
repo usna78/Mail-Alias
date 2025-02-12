@@ -47,6 +47,7 @@ mary: Mary@example.com
 tech_team:
   - john@company.com, Joe@example.com, mary
   - dev_leads
+
 dev_leads:
   - sarah@company.com
   - mike@company.com, Mary@example.com
