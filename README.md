@@ -41,7 +41,9 @@ uses is up to you. YAML is one excellent choice because it is easy to read and e
 ...
 
 bill: Bill.Williams@somecompany.com
+
 mary: Mary@example.com
+
 tech_team:
   - john@company.com, Joe@example.com, mary
   - dev_leads
