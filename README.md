@@ -3,12 +3,12 @@ Resolve email aliases from a local aliases file
 
 This module is useful when your script or application is unable to use the
 system email aliases file provided by your email server. The restriction would
-generally be encountered when, by policy, a the aliases file is reserved
+generally be encountered when, by policy, the aliases file is reserved
 for use by only a single group, such as just the system administrators.
 
 The restrictive policy has sometimes been justified by concerns over the fragile
-nature of the /etc/mail/aliases file (on a sendmail system). It breaks easily
-when minor configuration errors are made. If undetected the errors, can render
+nature of the /etc/mail/aliases file (on a system using sendmail as the MTA, for example). It breaks easily
+when minor configuration errors are made. If uncorrected, the errors, can render
 portions of the file inoperable. In a multi-application environment, this
 allows mistakes made by one group to interfere with emails being sent by 
 other groups. In addition, when multiple applications share a common aliases file
@@ -16,29 +16,24 @@ the email recipients can be inadvertently co-mingled.
 
 This module copes with this restriction by taking the input from an 
 application maintained local aliases file and recursively converting aliases
-to individual email addresses.
+to individual email addresses. Once all aliases are expanded, the recipient list consists of only
+individual email addresses. They are passed to the MTA without reliance on the system wide aliases file.
 
 The type of local file holding the alias definitions is up to the application. File
 types such as INI, JSON, YAML, XML and many others could be used.
 
-This module expects to be presented with a string of values consisting of a combination
-of email addresses and aliases
-
-I'll explain how this Perl code works. It's a module designed to handle email alias expansion - essentially converting shorthand names (aliases) into full email addresses.
-
 # Assumptions:
 - The application can load a locally maintained aliases configuration file consisting of key/value pairs
 - The aliases file can be maintained in any practical format such as YAML, Json, XML, INI or similar
-- When the entire file is loaded, the data is held in a hash reference 
-- The hash keys are the names of aliases and the values are combinations of email addresses (and quite possibly other aliases) belonging to the alias
+- When the entire aliases file is loaded, the data is held in a hash reference 
+- The hash keys are the names of parent aliases and the values are combinations of email addresses (and quite possibly children aliases) belonging to the parent alias
 - When preparing outbound email, the application provides a space or comma separated list of recipients as a combination of email addresses and/or aliases
 
 # Sample Configuration File:
-Note: This example assumes the configuration file is in YAML format. However, your application may be using any format
-that can be loaded as a hash reference. The format your script or application
-uses is up to you. YAML is one excellent choice because it is easy to read and edit.
+Note: This example assumes the configuration file is in YAML format. However, your application may use any format
+that is loaded as a hash reference. YAML is one excellent choice for the local alias file because it is easy to read and edit.
 
-# Sample YAML aliases file
+# Sample YAML aliases file (key: values)
 ...
 
 bill: Bill.Williams@somecompany.com
@@ -55,16 +50,22 @@ dev_leads:
 
 # Functionality:
 
-2. Module Tasks
+1. Tasks Performed by the Module
 - The code is a Perl module named `Mail::Aliases`
-- It requires two inputs: 1) the list of addressess and 2) the hash reference of the entire aliases file
-- It relies on the Email::Valid module to validate whether an addreess is a correctly formated email address
-- It relies on the Scalar::Utils module to differentiate between aliaes defined as a single line  value and aliases with multiple lines of values
+- It requires two inputs: 1) the list of addressees and 2) the hash reference of the entire aliases file
+- It relies on the Email::Valid module to validate whether an address is a correctly formated email address
+- It relies on the Scalar::Utils module to differentiate between aliaes defined as a single line value and aliases with multiple lines of values
 - It interprets non-email addresses as aliases and recursively converts them to individual email addresses
 - It produces a lower case, comma separated list of individual email addresses as its output
+- It rermoves duplicate email addresses from the output list
 - It is the applications responsibilty to process the list of email receipients through its mail sending client code
 
-2. Main Function: resolve_email_aliases
+2. Tasks NOT Performed by Mail::Aliases
+- The module does not send email for you.  It simply resolves any email aliases in  your recipent list to individual
+  email addresses without reliance on the system aliases file associated with your MTA. It does this by using the local aliases file
+  you maintain as part of your application.
+
+3. Main Function: resolve_email_aliases
 - Loads email aliases from a YAML file specified in the configuration
 - Processes four types of email lists:
   - admin_notification_list
@@ -73,7 +74,7 @@ dev_leads:
   - sms_notification_list
 - If the YAML file fails to load, it falls back to a failsafe notification list
 
-3. Email List Processing
+4. Email List Processing
 - Handles multiple formats of email lists:
   - Comma-separated values
   - Space-separated values
@@ -82,7 +83,7 @@ dev_leads:
   - A direct email address (contains @)
   - An alias that needs expansion
 
-4. Alias Expansion (expand_alias subroutine)
+5. Alias Expansion (expand_alias subroutine)
 - Takes an entry from the aliases file
 - Handles two types of alias definitions:
   - Array-based (multiple lines in YAML)
@@ -91,7 +92,7 @@ dev_leads:
 - Converts all email addresses to lowercase
 - Handles both single values and comma-separated lists within aliases
 
-5. Duplicate Removal
+6. Duplicate Removal
 - The `remove_duplicate_email_addresses` subroutine ensures each email address appears only once in the final list
 - Uses a hash to track seen addresses
 
