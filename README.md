@@ -45,7 +45,7 @@ bill: Bill.Williams@somecompany.com
 mary: Mary@example.com
 
 tech_team:
-  - john@company.com, Joe@example.com, mary
+  '-' john@company.com, Joe@example.com, mary
   - dev_leads
 
 dev_leads:
