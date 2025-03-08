@@ -33,85 +33,59 @@ types such as INI, JSON, YAML, XML and many others could be used.
 - Values are combinations of email addresses and alias names, as is coustomary in the MTA system aliases file
 - The script or application, when sending outbound email, expects recipients to be a comma separated list of email addresses
   
-# Sample Configuration File:
-Note: This example assumes the configuration file is in YAML format. However, your application may use any format
-that is loaded as a hash reference. YAML is one excellent choice for the local alias file because it is easy to read and edit.
+# Sample Aliases Files:
+Two sample configuration files (YAML and JSON formated) are provided as examples of locally maintained aliases files
+that load as a hash_ref containing acceptable keys and values. They intentionally hold various types of comma and space separation to
+demonstate the flexibility allowed in value formatting. 
 
-# Sample YAML aliases file (key: values)
-...
-
-bill: Bill.Williams@somecompany.com
-
-mary: Mary@example.com
-
-tech_team:
-  - john@company.com, Joe@example.com, mary
-  - dev_leads
-
-dev_leads:
-  - sarah@company.com
-  - mike@company.com, Mary@example.com
+# Limitations
+- This module does not currently duplicate the more complex capabilities of a MTA aliases file.  The module is limited to converting aliases
+  to email addresses. Each item in a value is assumed to be either an email address or an alias representing email addresses. A value
+  entry may not have any other purpose. For example, a value entry cannot represent a pipe to a command or append a message to a file.
 
 # Functionality:
+Functionality is explained within the Perl POD.  (perldoc LocalFile.pm)
 
-1. Tasks Performed by the Module
-- The code is a Perl module named `Mail::Aliases`
-- It requires two inputs: 1) the list of addressees and 2) the hash reference of the entire aliases file
-- It relies on the Email::Valid module to validate whether an address is a correctly formated email address
-- It relies on the Scalar::Utils module to differentiate between aliaes defined as a single line value and aliases with multiple lines of values
-- It interprets non-email addresses as aliases and recursively converts them to individual email addresses
-- It produces a lower case, comma separated list of individual email addresses as its output
-- It rermoves duplicate email addresses from the output list
-- It is the applications responsibilty to process the list of email receipients through its mail sending client code
+Basic functionality includes:
+- Malformed email addresses are skipped
+- References to non-existent aliases are skipped
+- Each alias is only expanded once, so circular references are tolerated and suppressed.
+- Warnings when encountering any of the above issues are captured 
+- Duplicated email recipients are removed
+- Basic email address format validity is determined through Email::Valid->address
+- Converts all email addresses to lower case lettering
 
-2. Tasks NOT Performed by Mail::Aliases
-- The module does not send email for you.  It simply resolves any email aliases in  your recipent list to individual
-  email addresses without reliance on the system aliases file associated with your MTA. It does this by using the local aliases file
-  you maintain as part of your application.
 
-3. Main Function: resolve_email_aliases
-- Loads email aliases from a YAML file specified in the configuration
-- Processes four types of email lists:
-  - admin_notification_list
-  - customer_notification_list
-  - copy_distribution_list
-  - sms_notification_list
-- If the YAML file fails to load, it falls back to a failsafe notification list
+# Input
+In your application, create a new resolver object - using Moo style named parameters
 
-4. Email List Processing
-- Handles multiple formats of email lists:
-  - Comma-separated values
-  - Space-separated values
-  - Single entries
-- For each entry, it determines if it's:
-  - A direct email address (contains @)
-  - An alias that needs expansion
+- my $resolver = LocalFile->new(aliases => $aliases);
+- my $result = $resolver->resolve_recipients($intended_recipients);
+  
+Where inputs are:
+- $aliases is a hash_ref of key/value pairs holding the entire contents of your locally maintained aliases file
+- $intended_recipients is an array_ref holding the email addressses and aliases of the intended email recipients
 
-5. Alias Expansion (expand_alias subroutine)
-- Takes an entry from the aliases file
-- Handles two types of alias definitions:
-  - Array-based (multiple lines in YAML)
-  - Scalar (single line)
-- Recursively expands nested aliases
-- Converts all email addresses to lowercase
-- Handles both single values and comma-separated lists within aliases
+# Output
+- my $result = $resolver->resolve_recipients($recipients);
+Where $result is a hash_ref as shown below:
 
-6. Duplicate Removal
-- The `remove_duplicate_email_addresses` subroutine ensures each email address appears only once in the final list
-- Uses a hash to track seen addresses
+my $recipients           = $result->{recipients};
+my $warning              = $result->{warning};
+my $alias_file_contents  = $result->{aliases};
+my $original_input       = $result->{original_input};
+my $processed_aliases    = $result->{processed_aliases};
+my $uniq_email_addresses = $result->{uniq_email_addresses};
+my $expanded_addresses   = $result->{expanded_addresses};
 
-# Here's a practical example of how it works:
-
-If the configuration specifies `admin_notification_list: tech_team`, the code would:
-1. Mail::Aliases::expand_alias($aliases, $addressees);
-2. Where $aliases is a hash reference holding the contents of the locally maintained aliases file
-3. Where $addressees holds the alias 'tech_team' as the intended recipient
-4. The tech_team alias is expanded to include:
-    - the email addresses john@company.com and Joe@example.com
-    - the mary alias is expanded to Mary@example.com
-    - the dev_leads alias is expanded to sarah@company.com and mike@company.com and Mary@example.com
-5. The initial expansion becomes: john@company.com,Joe@example.com,Mary@example.com,sarah@company.com,mike@company.com,Mary@example.com
-6. Remove any duplicates (in this case Mary's email is included only once)
-7. Convert all email addresses to lower case lettering
-8. Return: "john@company.com,joe@example.com,mary@example.com,sarah@company.com,mike@company.com"
-
+Where output includes all of the following to use as desired:
+- $recipients is the desired email aliases expansion like "john@company.com,joe@example.com,mary@example.com"
+- $warnings is an array_ref holding issues encountered, like a malformed email address or mispelled alias
+- $alias_file_contents is the entire contents of the local alias file, possibly for troubleshooting
+- $original_input is an array_ref holding the $intended_recipients, for troubleshooting
+- $processed_aliases is a hash_ref identifying each alias that was expanded to email addresses, for troubleshooting
+- $expanded_addresses is an array_ref built as each alias is expanded, which can include duplicate email addresses
+- $uniq_email_addresses is an array_ref like $expanded_addresses but with the duplicates (if any) removed
+  
+$recipients is the same content as $uniq_email_addresses, except it is held as the comma separated string most 
+likely desired by youe email code
