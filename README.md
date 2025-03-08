@@ -1,34 +1,38 @@
 # Mail-Aliases
-Resolve email aliases from a local aliases file
+Resolve email aliases from a locally maintained application specific aliases file
 
-This module is useful when your script or application is unable to use the
-system email aliases file provided by your email server. The restriction would
-generally be encountered when, by policy, the aliases file is reserved
-for use by only a single group, such as just the system administrators.
+# Rational
+This module is useful when your script or application is not using the
+system email aliases file provided by your server's Mail Transfer Agent (MTA). 
+The restriction would generally be encountered when, by policy, the MTA aliases 
+file is reserved for use by only a single group, such as just the server's system 
+administrators.
 
 The restrictive policy has sometimes been justified by concerns over the fragile
-nature of the /etc/mail/aliases file (on a system using sendmail as the MTA, for example). It breaks easily
+nature of the system wide MTA /etc/mail/aliases file. It breaks easily
 when minor configuration errors are made. If uncorrected, the errors, can render
 portions of the file inoperable. In a multi-application environment, this
-allows mistakes made by one group to interfere with emails being sent by 
-other groups. In addition, when multiple applications share a common aliases file
-the email recipients can be inadvertently co-mingled.
+allows mistakes made by one group when editing the aliases file to interfere with 
+emails being sent by other groups. In addition, when multiple applications share a 
+common aliases filethe email recipients can be inadvertently co-mingled.
 
-This module copes with this restriction by taking the input from an 
-application maintained local aliases file and recursively converting aliases
-to individual email addresses. Once all aliases are expanded, the recipient list consists of only
-individual email addresses. They are passed to the MTA without reliance on the system wide aliases file.
+This module removes any dependence your script or application has on your system 
+wide MTA aliases file. This is not to imply that your MTA aliases file should 
+not be used if it is available to you. The module provides an option for using 
+aliases when it is not.
 
 The type of local file holding the alias definitions is up to the application. File
 types such as INI, JSON, YAML, XML and many others could be used.
 
 # Assumptions:
-- The application can load a locally maintained aliases configuration file consisting of key/value pairs
-- The aliases file can be maintained in any practical format such as YAML, Json, XML, INI or similar
-- When the entire aliases file is loaded, the data is held in a hash reference 
-- The hash keys are the names of parent aliases and the values are combinations of email addresses (and quite possibly children aliases) belonging to the parent alias
-- When preparing outbound email, the application provides a space or comma separated list of recipients as a combination of email addresses and/or aliases
-
+- The application can load a locally maintained aliases configuration file
+- The aliases file can use any practical format such as YAML, Json, XML, INI or similar
+- When the entire aliases file is loaded, the data is held in a Perl hash reference 
+- Each hash key is the name of an alias
+- The value is a string or an array. (Hashes are not supported as values)
+- Values are combinations of email addresses and alias names, as is coustomary in the MTA system aliases file
+- The script or application, when sending outbound email, expects recipients to be a comma separated list of email addresses
+  
 # Sample Configuration File:
 Note: This example assumes the configuration file is in YAML format. However, your application may use any format
 that is loaded as a hash reference. YAML is one excellent choice for the local alias file because it is easy to read and edit.
