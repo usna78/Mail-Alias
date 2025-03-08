@@ -88,4 +88,4 @@ Where output includes all of the following to use as desired:
 - $uniq_email_addresses is an array_ref like $expanded_addresses but with the duplicates (if any) removed
   
 $recipients is the same content as $uniq_email_addresses, except it is held as the comma separated string most 
-likely desired by youe email code
+likely desired by your email code
