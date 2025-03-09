@@ -336,3 +336,224 @@ sub process_item {
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+=head1 NAME
+
+LocalFile - A module for resolving email aliases and building recipient lists
+without reliance on the MTA shared aliases file
+
+=head1 SYNOPSIS
+
+    use Mail::Alias::LocalFile;
+
+    $resolver = LocalFile->new(aliases => $alias_file_href);
+    $result = $resolver->resolve_recipients($intended_recipients_aref);
+
+    # Get the final comma-separated list of recipients
+    my $recipients = $result->{recipients};
+
+    # Check for any warnings
+    if (@{$result->{warning}}) {
+        print "Warnings: ", join("\n", @{$result->{warning}}), "\n";
+    }
+
+
+    # You can also detect all circular references in  the entire aliases file
+    $resolver = LocalFile->new(aliases => $alias_file_href);
+    @circular = $resolver->detect_circular_references($alias_file_ref);
+    if ( $circular[0] ) {
+        print "Circular references detected: ", join("\n", @circular), "\n";
+    }
+
+=head1 DESCRIPTION
+
+The C<LocalFile> module provides functionality to resolve email addresses and aliases into a
+unique list of email recipients. It handles nested aliases, validates email addresses, and
+detects circular references in alias definitions.
+
+This module is particularly useful for applications that need to expand distribution lists
+or group aliases into actual email addresses while ensuring uniqueness and validity.
+
+=head1 Return Value output ( $result )
+Returns a hash_ref:
+
+    $result{expanded_addresses}
+    $result{uniq_email_addresses}
+    $result{recipients} 
+    $result{original_input}
+    $result{warning}
+    $result{aliases}
+    $result{processed_aliases}
+
+Where $result{recipients} is the comma separated expanded email addresses
+suitable for use in to To: field of your email generation code
+
+Other available result keys are useful for troubleshooting
+
+=head1 ATTRIBUTES
+
+=head2 warning
+
+An array reference storing warning messages generated during processing.
+
+    $resolver->warning(["Warning message"]);
+    my $warnings = $resolver->warning;
+
+=head2 aliases
+
+A hash reference mapping alias names to their values (either strings or array references).
+This attribute is required when creating a new instance.
+
+    my $aliases = $resolver->aliases;
+
+=head2 expanded_addresses
+
+An array reference containing all expanded email addresses (including duplicates).
+
+    my $all_addresses = $resolver->expanded_addresses;
+
+=head2 addresses_and_aliases
+
+An array reference containing the current working list of addresses and aliases
+being processed.
+
+    $resolver->addresses_and_aliases(['team', 'support@example.com']);
+
+=head2 original_input
+
+An array reference containing the original input provided to C<resolve_recipients>.
+
+    my $original = $resolver->original_input;
+
+=head2 processed_aliases
+
+A hash reference tracking which aliases have been processed to avoid duplicate
+processing.
+
+    my $processed = $resolver->processed_aliases;
+
+=head2 uniq_email_addresses
+
+An array reference containing the final list of unique email addresses after
+expansion and deduplication.
+
+    my $unique = $resolver->uniq_email_addresses;
+
+=head1 METHODS
+
+=head2 resolve_recipients
+
+Expands a list of addresses and aliases into a unique list of email addresses.
+
+    my $result = $resolver->resolve_recipients(['team', 'john@example.com']);
+
+Returns a hash reference with the following keys:
+
+=over 4
+
+=item * C<expanded_addresses>: All expanded addresses (including duplicates)
+
+=item * C<uniq_email_addresses>: Unique email addresses after deduplication
+
+=item * C<recipients>: Comma-separated string of unique addresses
+
+=item * C<original_input>: Original input provided
+
+=item * C<warning>: Any warnings generated during processing
+
+=item * C<aliases>: Reference to the original aliases hash
+
+=item * C<processed_aliases>: Aliases that were processed
+
+=back
+
+=head2 extract_addresses_from_list
+
+Processes a single element that might contain multiple addresses or aliases.
+
+    $resolver->extract_addresses_from_list('john@example.com, team');
+
+=head2 process_single_item
+
+Processes a single item, determining if it's an email address or an alias.
+
+    $resolver->process_single_item('john@example.com');
+
+=head2 process_potential_email
+
+Validates and normalizes a potential email address.
+
+    $resolver->process_potential_email('John@Example.COM');
+
+=head2 process_potential_alias
+
+Processes an alias name, expanding it if found.
+
+    $resolver->process_potential_alias('team');
+
+=head2 expand_alias
+
+Expands an alias into its constituent addresses and/or other aliases.
+
+    $resolver->expand_alias('team');
+
+=head2 remove_duplicate_email_addresses
+
+Removes duplicate email addresses from the expanded list.
+
+    my $unique_addresses = $resolver->remove_duplicate_email_addresses();
+
+=head2 detect_circular_references
+
+Detects circular references in the alias definitions.
+
+    my @circular = $resolver->detect_circular_references($aliases);
+
+Returns an array of strings describing any circular references found, with each string
+showing the path of the circular reference (e.g., "team -> dev-team -> team").
+
+=head2 check_circular
+
+Internal recursive function to check for circular references.
+
+=head2 process_item
+
+Internal function to process individual items when checking for circular references.
+
+=head1 DEPENDENCIES
+
+=over 4
+
+=item * Moo
+
+=item * namespace::autoclean
+
+=item * Email::Valid
+
+=item * Scalar::Util
+
+=item * Data::Dumper::Concise
+
+=item * Types::Standard
+
+=back
+
+=head1 AUTHOR
+
+Russ Brewer (RBREW)
+
+=head1 VERSION
+
+0.01
+
+=head1 SEE ALSO
+
+=over 4
+
+=item * Email::Valid
+
+=item * Moo
+
+=back
+
+=cut
