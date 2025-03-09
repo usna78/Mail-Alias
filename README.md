@@ -1,25 +1,27 @@
 # Mail-Aliases
 Resolve email aliases from a locally maintained application specific aliases file
+in addition to the system-wide aliases file used by the Mail Transfer Agent (MTA).
 
 # Rational
+This module allows the use of a locally maintained aliases file in addition to using the 
+aliases file used by the MTA. This is beneficial for several reasons:
+- The MTA aliases file may not be available to you because editing it is restricted by corporate policy
+- The MTA aliases file is shared  and you want to avoid conflicting alias names already in use others
+- The MTA is being edited by persons not affliated with you application and their errors affect your emails
+- You want control of your own aliases in a file not availble to others  still use entries in the system aliases file needed
+
 This module is useful when your script or application is not using the
 system email aliases file provided by your server's Mail Transfer Agent (MTA). 
 The restriction would generally be encountered when, by policy, the MTA aliases 
 file is reserved for use by only a single group, such as just the server's system 
 administrators.
 
-The restrictive policy has sometimes been justified by concerns over the fragile
-nature of the system wide MTA /etc/mail/aliases file. It breaks easily
-when minor configuration errors are made. If uncorrected, the errors, can render
-portions of the file inoperable. In a multi-application environment, this
-allows mistakes made by one group when editing the aliases file to interfere with 
-emails being sent by other groups. In addition, when multiple applications share a 
-common aliases filethe email recipients can be inadvertently co-mingled.
-
-This module removes any dependence your script or application has on your system 
-wide MTA aliases file. This is not to imply that your MTA aliases file should 
-not be used if it is available to you. The module provides an option for using 
-aliases when it is not.
+This module reduces the dependence your script or application has on your system 
+wide MTA aliases file. You can avoid the use of the system aliases entirely or you 
+can use some system aliases to supplement your local aliases. This is not to imply 
+that your MTA aliases file should not be used if it is available to you. This module 
+provides an option for using locally defined aliases when when desired and using 
+system wide aliases only when desired.
 
 The type of local file holding the alias definitions is up to the application. File
 types such as INI, JSON, YAML, XML and many others could be used.
@@ -39,9 +41,44 @@ that load as a hash_ref containing acceptable keys and values. They intentionall
 demonstate the flexibility allowed in value formatting. 
 
 # Limitations
-- This module does not currently duplicate the more complex capabilities of a MTA aliases file.  The module is limited to converting aliases
-  to email addresses. Each item in a value is assumed to be either an email address or an alias representing email addresses. A value
-  entry may not have any other purpose. For example, a value entry cannot represent a pipe to a command or append a message to a file.
+- This module focuses to converting aliasesto email addresses and does not attempt to duplicate
+  the more complex capabilities of a MTA aliases file.
+
+# Regular aliases and aliases with the mta_ prefix
+  - Regular aliases:
+    
+    Each value in the local alias file is assumed to consist of one or more email addresses and may also include locally
+    defined aliases representing email addresses. Locally defined aliases listed as values are expanded
+    without the use of the system aliases file. For example, an alias named 'sales' is expanded to the email addresses
+    assigned to the 'sales' alias defined in the local aliases file. If there is also a sales alias defined on the system
+    aliases file, it is not used.  The local alias definition supercedes the system file definition.
+
+  - mta_ prefixes
+
+    The 'mta_' prefix is used to allow aliases to be expanded by the MTA instead of being expanded locally. 
+    For example, assume a value in the local aliases file hold alias 'mta_sales'. This module recognizes the 'mta_' prefix,
+    removes the prefix, and allows the remainder (in this case sales) to pass through for eventual expansion by the MTA using
+    the system aliases file.
+
+    'mta_' prefixed aliases can be used to supplement system file aliases. Assume the sales alias in the system file includes two
+    email addresses for senior managers joe and mary:
+
+    sales: joe@hq.company.com, mary@hq.company.com  (In the system aliases file)
+
+    The local alias file could hold this entry:
+
+    sales: billy@local.company.com, mta_sales  (In the local aliases file)
+
+    This module would expand the local alias (picking up billy@local.company.com as a recipient) and strip the prefix from mta_sales.
+    The To: section of your email header would receive billy@local.company.com,sales.  When the email is
+    processed by the MTA, sales is expanded using the system aliases file to include joe and mary's email addresses.
+    The three recipients become billy@local.company.com,joe@hq.company.com,mary@hq.company.com
+
+    The 'mta_' prefix can also be used to take advantage of advanced aliasing features not supported by the local aliases file, such as
+    appending email to files, or using pipes to execute commands. As long as the alias is defined in the system aliases file, the local
+    alias file can use a corresponding mta_ prefix to incorporate it.
+
+    The 'mta_' prefix cannot be used as prefix to a local aliases file key.  Its use is restricted to inclusion as a value.
 
 # Functionality:
 Functionality is explained within the Perl POD.  (perldoc LocalFile.pm)
