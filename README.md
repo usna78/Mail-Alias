@@ -60,51 +60,61 @@ demonstate the flexibility allowed in value formatting.
     removes the prefix, and allows the remainder (in this case sales) to pass through for eventual expansion by the MTA using
     the system aliases file.
 
-    'mta_' prefixed aliases can be used to supplement system file aliases. Assume the sales alias in the system file includes two
+    'mta_' prefixed aliases can be used in conjunction with the system file aliases. Assume the sales alias in the system file includes two
     email addresses for senior managers joe and mary:
 
-    sales: joe@hq.company.com, mary@hq.company.com  (In the system aliases file)
+        sales: joe@hq.company.com, mary@hq.company.com  (In the system aliases file)
 
     The local alias file could hold this entry:
 
-    sales: billy@local.company.com, mta_sales  (In the local aliases file)
+        sales: billy@local.company.com, mta_sales
 
-    This module would expand the local alias (picking up billy@local.company.com as a recipient) and strip the prefix from mta_sales.
-    The To: section of your email header would receive billy@local.company.com,sales.  When the email is
+    The module would expand the local alias (picking up billy@local.company.com as a recipient) and strip the prefix from mta_sales.
+    The To: section of your email header would receive 'billy@local.company.com,sales'.  When the email is
     processed by the MTA, sales is expanded using the system aliases file to include joe and mary's email addresses.
-    The three recipients become billy@local.company.com,joe@hq.company.com,mary@hq.company.com
+    The three recipients become 'billy@local.company.com,joe@hq.company.com,mary@hq.company.com'
+
+    To send email to a local user mail account on the server, create an alias for the username in the local aliases file and assign a value that uses
+    the mta_ prefix.  For a user with login name INC0027 the local aliases file entry would be:
+
+    INC0027: mta_INC0027
 
     The 'mta_' prefix can also be used to take advantage of advanced aliasing features not supported by the local aliases file, such as
     appending email to files, or using pipes to execute commands. As long as the alias is defined in the system aliases file, the local
     alias file can use a corresponding mta_ prefix to incorporate it.
 
-    The 'mta_' prefix cannot be used as prefix to a local aliases file key.  Its use is restricted to inclusion as a value.
+    The 'mta_' prefix cannot be used as prefix to a key in the local aliases.  Its use is restricted to inclusion as part of a value.
+    In the local aliases file:
+    
+        mta_postmaster: postmater (NOT ALLOWED. the mta_ prefix cannot be used in a local aliases key)
+    
+        postmaster: mta_postmaster (Correct. the mta_ prefix is used within values, not within keys)
 
 # Functionality:
-Functionality is explained within the Perl POD.  (perldoc LocalFile.pm)
+Methods are described within the Perl POD.  (perldoc LocalFile.pm)
 
-Basic functionality includes:
+Method provided functionality includes:
 - Malformed email addresses are skipped
 - References to non-existent aliases are skipped
-- Each alias is only expanded once, so circular references are tolerated and suppressed.
+- Each alias is only expanded once, so circular references are tolerated by suppression.
 - Warnings when encountering any of the above issues are captured 
 - Duplicated email recipients are removed
 - Basic email address format validity is determined through Email::Valid->address
 - Converts all email addresses to lower case lettering
+- Utilizes the system wide MTA aliases file when the 'mta_' is attached to an addressee
 
 
 # Input
 In your application, create a new resolver object - using Moo style named parameters
 
-- my $resolver = LocalFile->new(aliases => $aliases);
-- my $result = $resolver->resolve_recipients($intended_recipients);
+- my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
   
 Where inputs are:
 - $aliases is a hash_ref of key/value pairs holding the entire contents of your locally maintained aliases file
 - $intended_recipients is an array_ref holding the email addressses and aliases of the intended email recipients
 
 # Output
-- my $result = $resolver->resolve_recipients($recipients);
+- my $result = $resolver->resolve_recipients($intended_recipients);
 Where $result is a hash_ref as shown below:
 
 my $recipients           = $result->{recipients};
@@ -126,3 +136,21 @@ Where output includes all of the following to use as desired:
   
 $recipients is the same content as $uniq_email_addresses, except it is held as the comma separated string most 
 likely desired by your email code
+
+Screen for circular references in the local aliases file is follows:
+
+# Detect and report circular references
+LocalFile.pm is generally tolerant of circular alias references within the local aliases file. An attempt is made to 
+avoid a loop by only expanding each alias once. Nevertheless, good practice necessitates removing circular references 
+whenever possible.
+```
+$resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
+@circular_refs = $resolver->detect_circular_references($aliases);
+
+if (@circular_refs) {
+    print "WARNING: Circular references detected:\n";
+    foreach my $ref (@circular_refs) {
+        print "  $ref\n";
+    }
+}
+```
