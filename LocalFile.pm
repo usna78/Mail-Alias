@@ -54,6 +54,12 @@ has 'uniq_email_addresses' => (
     default => sub { [] },
 );
 
+has 'mta_aliases' => (
+    is      => 'rw',
+    isa     => ArrayRef,
+    default => sub { [] },
+);
+
 # Methods
 sub resolve_recipients {
     my ( $self, $addresses_and_aliases_ref ) = @_;
@@ -64,6 +70,7 @@ sub resolve_recipients {
     $self->original_input( \@values );
     $self->expanded_addresses( [] );
     $self->processed_aliases( {} );
+    $self->mta_aliases( [] );
 
     # Process all addresses and aliases
     while ( @{ $self->addresses_and_aliases } ) {
@@ -74,7 +81,9 @@ sub resolve_recipients {
     # Remove duplicates and build the final comma-separated list
     my $uniq_email_recipients = $self->remove_duplicate_email_addresses();
 
-    my $recipients = join( ',', @{$uniq_email_recipients} );
+    # Combine email recipients with MTA aliases
+    my @all_recipients = ( @{$uniq_email_recipients}, @{$self->mta_aliases} );
+    my $recipients = join( ',', @all_recipients );
 
     my %result;
     $result{expanded_addresses}   = $self->expanded_addresses;
@@ -84,6 +93,7 @@ sub resolve_recipients {
     $result{warning}              = $self->warning;
     $result{aliases}              = $self->aliases;
     $result{processed_aliases}    = $self->processed_aliases;
+    $result{mta_aliases}          = $self->mta_aliases;
 
     return \%result;
 }
@@ -128,13 +138,25 @@ sub extract_addresses_from_list {
 sub process_single_item {
     my ( $self, $single_item ) = @_;
 
+    # Check if this is an MTA-delegated alias (starts with mta_)
+    if ( $single_item =~ /^mta_(.+)$/x ) {
+        $self->process_mta_alias($1);
+    }
     # Process based on whether it looks like an email address
-    if ( $single_item =~ /@/x ) {
+    elsif ( $single_item =~ /@/x ) {
         $self->process_potential_email($single_item);
     }
     else {
         $self->process_potential_alias($single_item);
     }
+    return;
+}
+
+sub process_mta_alias {
+    my ( $self, $alias ) = @_;
+    
+    # Add the alias to the list of MTA aliases (without the mta_ prefix)
+    push @{ $self->mta_aliases }, $alias;
     return;
 }
 
@@ -171,6 +193,13 @@ sub process_potential_alias {
 
     my @warning           = @{ $self->warning };
     my $processed_aliases = $self->processed_aliases;
+
+    # Check if the alias has the mta_ prefix (not allowed as a key)
+    if ( $alias =~ /^mta_/x ) {
+        push @warning, "ERROR: Alias keys with 'mta_' prefix are not allowed, skipping alias '$alias'";
+        $self->warning( \@warning );
+        return;
+    }
 
     # Check if this alias exists
     if ( !exists $self->aliases->{$alias} ) {
@@ -273,6 +302,9 @@ sub detect_circular_references {
     my @circular_references = ();
 
     foreach my $key ( keys %$aliases ) {
+        # Skip checking aliases with mta_ prefix
+        next if $key =~ /^mta_/x;
+        
         my @path = ($key);
         check_circular( $key, $aliases, \@path, \%seen_paths,
             \@circular_references );
@@ -310,6 +342,9 @@ sub process_item {
     foreach my $subitem (@items) {
         $subitem =~ s/^\s+|\s+$//g;    # Trim whitespace
         next unless $subitem;          # Skip empty items
+        
+        # Skip items with mta_ prefix
+        next if $subitem =~ /^mta_/x;
 
         # Check if this is a reference to another alias
         if ( exists $aliases->{$subitem} ) {
@@ -374,6 +409,10 @@ detects circular references in alias definitions.
 This module is particularly useful for applications that need to expand distribution lists
 or group aliases into actual email addresses while ensuring uniqueness and validity.
 
+Values with the prefix 'mta_' will not be expanded locally but will be passed to the MTA for
+expansion. The 'mta_' prefix will be stripped before passing to the MTA. Alias keys with
+the 'mta_' prefix are not allowed and will be skipped with a warning.
+
 =head1 Return Value output ( $result )
 Returns a hash_ref:
 
@@ -384,8 +423,9 @@ Returns a hash_ref:
     $result{warning}
     $result{aliases}
     $result{processed_aliases}
+    $result{mta_aliases}
 
-Where $result{recipients} is the comma separated expanded email addresses
+Where $result{recipients} is the comma separated expanded email addresses and MTA aliases
 suitable for use in to To: field of your email generation code
 
 Other available result keys are useful for troubleshooting
@@ -439,6 +479,13 @@ expansion and deduplication.
 
     my $unique = $resolver->uniq_email_addresses;
 
+=head2 mta_aliases
+
+An array reference containing aliases that should be passed to the MTA for expansion
+after the 'mta_' prefix has been removed.
+
+    my $mta_aliases = $resolver->mta_aliases;
+
 =head1 METHODS
 
 =head2 resolve_recipients
@@ -455,7 +502,7 @@ Returns a hash reference with the following keys:
 
 =item * C<uniq_email_addresses>: Unique email addresses after deduplication
 
-=item * C<recipients>: Comma-separated string of unique addresses
+=item * C<recipients>: Comma-separated string of unique addresses and MTA aliases
 
 =item * C<original_input>: Original input provided
 
@@ -464,6 +511,8 @@ Returns a hash reference with the following keys:
 =item * C<aliases>: Reference to the original aliases hash
 
 =item * C<processed_aliases>: Aliases that were processed
+
+=item * C<mta_aliases>: Aliases designated to be processed by the MTA
 
 =back
 
@@ -475,9 +524,15 @@ Processes a single element that might contain multiple addresses or aliases.
 
 =head2 process_single_item
 
-Processes a single item, determining if it's an email address or an alias.
+Processes a single item, determining if it's an email address, an alias, or an MTA-delegated alias.
 
     $resolver->process_single_item('john@example.com');
+
+=head2 process_mta_alias
+
+Processes an MTA-delegated alias (with 'mta_' prefix).
+
+    $resolver->process_mta_alias('postmaster');
 
 =head2 process_potential_email
 
