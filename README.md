@@ -6,22 +6,15 @@ in addition to the system-wide aliases file used by the Mail Transfer Agent (MTA
 This module allows the use of a locally maintained aliases file in addition to using the 
 aliases file used by the MTA. This is beneficial for several reasons:
 - The MTA aliases file may not be available to you because editing it is restricted by corporate policy
-- The MTA aliases file is shared  and you want to avoid conflicting alias names already in use others
-- The MTA is being edited by persons not affliated with you application and their errors affect your emails
-- You want control of your own aliases in a file not availble to others  still use entries in the system aliases file needed
-
-This module is useful when your script or application is not using the
-system email aliases file provided by your server's Mail Transfer Agent (MTA). 
-The restriction would generally be encountered when, by policy, the MTA aliases 
-file is reserved for use by only a single group, such as just the server's system 
-administrators.
+- The MTA aliases file is shared  and you want to avoid conflicting alias names already in use by others
+- The MTA is being edited by persons not affliated with you application and their errors will affect your emails
+- You want control of your own aliases in a file not availble to others but also use entries in the system aliases file when needed
 
 This module reduces the dependence your script or application has on your system 
 wide MTA aliases file. You can avoid the use of the system aliases entirely or you 
-can use some system aliases to supplement your local aliases. This is not to imply 
-that your MTA aliases file should not be used if it is available to you. This module 
-provides an option for using locally defined aliases when when desired and using 
-system wide aliases only when desired.
+can use some system aliases to supplement your local maintained aliases. This module 
+is useful when you want to maintain your own email aliases file, supplemented by the 
+limited use of the system wide aliases file.
 
 The type of local file holding the alias definitions is up to the application. File
 types such as INI, JSON, YAML, XML and many others could be used.
@@ -37,12 +30,22 @@ types such as INI, JSON, YAML, XML and many others could be used.
   
 # Sample Aliases Files:
 Two sample configuration files (YAML and JSON formated) are provided as examples of locally maintained aliases files
-that load as a hash_ref containing acceptable keys and values. They intentionally hold various types of comma and space separation to
-demonstate the flexibility allowed in value formatting. 
+that load as a hash_ref containing acceptable keys and values. They intentionally hold various types of comma and space 
+separation to demonstate the flexibility allowed in value formatting. They hold examples of the 'mta_' prefix used to incorporate 
+the use of entries in the system MTA aliases file.
 
-# Limitations
-- This module focuses to converting aliasesto email addresses and does not attempt to duplicate
-  the more complex capabilities of a MTA aliases file.
+Two sample scripts are included to demonstrate usage. Use perldoc with them for descriptions.
+
+# Limitations and Applicability
+- This module focuses to converting aliases to email addresses using a local file you manually edit and maintain. The more complex capabilities
+  of a MTA system wide aliases file still require the use of that file. When needed those capabilities can be accessed from entries in your local file.
+- This modules reads your local file and resolves the aliases it contains but does not create or update the file.  You edit your local file manually.
+  The YAML or JASON format is suggested because they have an easy to maintain layout. However, you can use any format you like as long as it can be
+  loaded as a hash reference that contains keys with values that are strings or arrays.
+- This module is not dependent on the (excellent) Mail::Alias module. Mail::Alias is designed to read, write, update and convert between the
+  Sendmail, Ucbmail and Binmail MTA alias file formats. This module has a diffferent purpose, which is to avoid reliance on the MTA system file
+  to the extent possible.
+- 
 
 # Regular aliases and aliases with the mta_ prefix
   - Regular aliases:
