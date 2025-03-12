@@ -25,36 +25,36 @@ types such as INI, JSON, YAML, XML and many others could be used.
 - When the entire aliases file is loaded, the data is held in a Perl hash reference 
 - Each hash key is the name of an alias
 - The value is a string or an array. (Hashes are not supported as values)
-- Values are combinations of email addresses and alias names, as is coustomary in the MTA system aliases file
-- The script or application, when sending outbound email, expects recipients to be a comma separated list of email addresses
+- Values are combinations of one or more email addresses and alias names, just as is customary in the MTA system aliases file
+- The script or application, when sending outbound email, expects recipients to be a comma separated list of email addresses, ie joe@example.com,mary@company.com,mike@sample.com
   
 # Sample Aliases Files:
-Two sample configuration files (YAML and JSON formated) are provided as examples of locally maintained aliases files
+Sample configuration files (YAML and JSON formated) are provided as examples of locally maintained aliases files
 that load as a hash_ref containing acceptable keys and values. They intentionally hold various types of comma and space 
-separation to demonstate the flexibility allowed in value formatting. They hold examples of the 'mta_' prefix used to incorporate 
-the use of entries in the system MTA aliases file.
+separation to demonstate the flexibility allowed in value formatting. They hold examples of the 'mta_' prefix used to include aliases from the system MTA aliases file.
 
-Two sample scripts are included to demonstrate usage. Use perldoc with them for descriptions.
+Sample scripts are included to demonstrate usage. Use perldoc with them for POD descriptions.
 
 # Limitations and Applicability
 - This module focuses to converting aliases to email addresses using a local file you manually edit and maintain. The more complex capabilities
-  of a MTA system wide aliases file still require the use of that file. When needed those capabilities can be accessed from entries in your local file.
-- This modules reads your local file and resolves the aliases it contains but does not create or update the file.  You edit your local file manually.
+  of a MTA system wide aliases file still require the use of that file. When needed, those capabilities can be accessed from entries in your local file.
+- This module receives the hash_ref provided when you load your local aliases file. It does not create or update the file.  Just like the system mail
+  aliases file, you edit your local file manually.
   The YAML or JASON format is suggested because they have an easy to maintain layout. However, you can use any format you like as long as it can be
   loaded as a hash reference that contains keys with values that are strings or arrays.
-- This module is not dependent on the (excellent) Mail::Alias module. Mail::Alias is designed to read, write, update and convert between the
+- This module is NOT dependent on the (excellent) Mail::Alias module. Mail::Alias is designed to read, write, update and convert between the
   Sendmail, Ucbmail and Binmail MTA alias file formats. This module has a diffferent purpose, which is to avoid reliance on the MTA system file
   to the extent possible.
-- 
 
 # Regular aliases and aliases with the mta_ prefix
   - Regular aliases:
     
-    Each value in the local alias file is assumed to consist of one or more email addresses and may also include locally
-    defined aliases representing email addresses. Locally defined aliases listed as values are expanded
-    without the use of the system aliases file. For example, an alias named 'sales' is expanded to the email addresses
-    assigned to the 'sales' alias defined in the local aliases file. If there is also a sales alias defined on the system
-    aliases file, it is not used.  The local alias definition supercedes the system file definition.
+    Just like the system aliases file, each value in the local alias file is assumed to consist of one or more
+    email addresses and may also include locally defined aliases representing email addresses. Locally defined aliases
+    listed as values are expanded without the use of the system aliases file. For example, an alias named 'sales' is
+    expanded to the email addresses assigned to the 'sales' alias defined in the local aliases file. If there is also
+    a sales alias defined on the system aliases file, it is not used.  The local alias definition supercedes the system
+    file definition.
 
   - mta_ prefixes
 
@@ -78,7 +78,7 @@ Two sample scripts are included to demonstrate usage. Use perldoc with them for 
     The three recipients become 'billy@local.company.com,joe@hq.company.com,mary@hq.company.com'
 
     To send email to a local user mail account on the server, create an alias for the username in the local aliases file and assign a value that uses
-    the mta_ prefix.  For a user with login name INC0027 the local aliases file entry would be:
+    the mta_ prefix.  For a user with login name INC0027 the YAML formated local aliases file entry could be:
 
     INC0027: mta_INC0027
 
@@ -104,7 +104,7 @@ Method provided functionality includes:
 - Duplicated email recipients are removed
 - Basic email address format validity is determined through Email::Valid->address
 - Converts all email addresses to lower case lettering
-- Utilizes the system wide MTA aliases file when the 'mta_' is attached to an addressee
+- Utilizes the system wide MTA aliases file when the 'mta_' prefix is attached to the system wide alias
 
 
 # Input
