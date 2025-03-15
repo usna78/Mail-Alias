@@ -4,3 +4,4 @@
 *_log
 *.tar
 *.tgz
+.gitignore
