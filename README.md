@@ -114,19 +114,20 @@ In your application, create a new resolver object - using Moo style named parame
   
 Where inputs are:
 - $aliases is a hash_ref of key/value pairs holding the entire contents of your locally maintained aliases file
-- $intended_recipients is an array_ref holding the email addressses and aliases of the intended email recipients
 
 # Output
 - my $result = $resolver->resolve_recipients($intended_recipients);
-Where $result is a hash_ref as shown below:
+    $intended_recipients is an array_ref holding the email addressses and aliases of the intended email recipients
 
-my $recipients           = $result->{recipients};
-my $warning              = $result->{warning};
-my $alias_file_contents  = $result->{aliases};
-my $original_input       = $result->{original_input};
-my $processed_aliases    = $result->{processed_aliases};
-my $uniq_email_addresses = $result->{uniq_email_addresses};
-my $expanded_addresses   = $result->{expanded_addresses};
+- Where $result is a hash_ref as shown below:
+
+    my $recipients           = $result->{recipients};
+    my $warning              = $result->{warning};
+    my $alias_file_contents  = $result->{aliases};
+    my $original_input       = $result->{original_input};
+    my $processed_aliases    = $result->{processed_aliases};
+    my $uniq_email_addresses = $result->{uniq_email_addresses};
+    my $expanded_addresses   = $result->{expanded_addresses};
 
 Where output includes all of the following to use as desired:
 - $recipients is the desired email aliases expansion like "john@company.com,joe@example.com,mary@example.com"
