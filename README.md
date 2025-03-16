@@ -21,7 +21,7 @@ types such as INI, JSON, YAML, XML and many others could be used.
 
 # Assumptions:
 - The application can load a locally maintained aliases configuration file
-- The aliases file can use any practical format such as YAML, Json, XML, INI or similar
+- The aliases file can use any practical format such as YAML, JSON, XML, INI or similar
 - When the entire aliases file is loaded, the data is held in a Perl hash reference 
 - Each hash key is the name of an alias
 - The value is a string or an array. (Hashes are not supported as values)
@@ -117,10 +117,9 @@ Where inputs are:
 
 # Output
 - my $result = $resolver->resolve_recipients($intended_recipients);
-    $intended_recipients is an array_ref holding the email addressses and aliases of the intended email recipients
-
+- $intended_recipients is an array_ref holding the email addressses and aliases of the intended email recipients
 - Where $result is a hash_ref as shown below:
-
+```
     my $recipients           = $result->{recipients};
     my $warning              = $result->{warning};
     my $alias_file_contents  = $result->{aliases};
@@ -129,6 +128,7 @@ Where inputs are:
     my $uniq_email_addresses = $result->{uniq_email_addresses};
     my $expanded_addresses   = $result->{expanded_addresses};
 
+```
 Where output includes all of the following to use as desired:
 - $recipients is the desired email aliases expansion like "john@company.com,joe@example.com,mary@example.com"
 - $warnings is an array_ref holding issues encountered, like a malformed email address or mispelled alias
@@ -141,12 +141,11 @@ Where output includes all of the following to use as desired:
 $recipients is the same content as $uniq_email_addresses, except it is held as the comma separated string most 
 likely desired by your email code
 
-Screen for circular references in the local aliases file is follows:
-
 # Detect and report circular references
 LocalFile.pm is generally tolerant of circular alias references within the local aliases file. An attempt is made to 
 avoid a loop by only expanding each alias once. Nevertheless, good practice necessitates removing circular references 
-whenever possible.
+whenever possible. Screen for circular references in the local aliases file is follows:
+
 ```
 $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
 @circular_refs = $resolver->detect_circular_references($aliases);
