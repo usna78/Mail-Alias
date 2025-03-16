@@ -5,8 +5,8 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Exception;
-use FindBin qw($Bin);
-use lib "$Bin/../../../../lib";  # Adjust path as needed to find LocalFile
+# use FindBin qw($Bin);
+# use lib "$Bin/../../../../lib";  # Adjust path as needed to find LocalFile
 
 # Test for empty recipients in various edge cases
 use_ok('Mail::Alias::LocalFile');
@@ -17,7 +17,7 @@ subtest 'Non-existent alias' => sub {
         'existing' => 'test@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['nonexistent']);
     
     is($result->{recipients}, '', 'Recipients is empty when using non-existent alias');
@@ -33,7 +33,7 @@ subtest 'Alias key with mta_ prefix' => sub {
         'mta_postmaster' => 'postmaster@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     
     # Test using the mta_ prefixed key directly
     my $result = $resolver->resolve_recipients(['mta_postmaster']);
@@ -52,7 +52,7 @@ subtest 'Alias key with no values' => sub {
         'normal' => 'test@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['empty_alias']);
     
     is($result->{recipients}, '', 'Recipients is empty when alias has no values');
@@ -69,7 +69,7 @@ subtest 'Alias value as hash' => sub {
         'normal' => 'test@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['hash_alias']);
     
     # Since the code doesn't explicitly handle hash values, it will likely ignore them
@@ -84,7 +84,7 @@ subtest 'Alias with only malformed email addresses' => sub {
         'normal' => 'test@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['bad_emails']);
     
     is($result->{recipients}, '', 'Recipients is empty when alias contains only malformed emails');
@@ -105,7 +105,7 @@ subtest 'Combined edge cases' => sub {
         'normal' => 'test@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients([
         'nonexistent', 
         'mta_postmaster', 
@@ -124,7 +124,7 @@ subtest 'Normal case' => sub {
         'normal' => 'test@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['normal']);
     
     isnt($result->{recipients}, '', 'Recipients is not empty in normal case');
@@ -139,7 +139,7 @@ subtest 'Mixed valid and invalid inputs' => sub {
         'bad_email' => 'not-an-email',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['valid', 'empty', 'bad_email', 'nonexistent']);
     
     isnt($result->{recipients}, '', 'Recipients is not empty with mixed inputs');

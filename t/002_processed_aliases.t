@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use FindBin qw($Bin);
-use lib "$Bin/../../../../lib";  # Adjust path as needed to find LocalFile
+use lib "$Bin/../../../../lib";  # Adjust path as needed to find Mail::Alias::LocalFile
 
 #use FindBin;  # path to this script
 #use lib "$FindBin::Bin/../../../"; # path to lib directory
@@ -23,7 +23,7 @@ subtest 'Empty processed_aliases HashRef' => sub {
         'test2' => 'test2@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     
     # Initial state check
     is_deeply($resolver->processed_aliases, {}, 'processed_aliases starts empty');
@@ -34,25 +34,25 @@ subtest 'Empty processed_aliases HashRef' => sub {
         'processed_aliases remains empty when only direct emails are given');
     
     # Case 2: Empty result when no recipients are provided
-    $resolver = LocalFile->new(aliases => $aliases);
+    $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     $result = $resolver->resolve_recipients([]);
     is_deeply($result->{processed_aliases}, {}, 
         'processed_aliases remains empty when no recipients are provided');
     
     # Case 3: Empty result for non-existent aliases
-    $resolver = LocalFile->new(aliases => $aliases);
+    $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     $result = $resolver->resolve_recipients(['nonexistent1', 'nonexistent2']);
     is_deeply($result->{processed_aliases}, {}, 
         'processed_aliases remains empty when only non-existent aliases are given');
     
     # Case 4: Direct MTA aliases don't populate processed_aliases
-    $resolver = LocalFile->new(aliases => $aliases);
+    $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     $result = $resolver->resolve_recipients(['mta_alias1', 'mta_alias2']);
     is_deeply($result->{processed_aliases}, {}, 
         'processed_aliases remains empty when only MTA aliases are given');
     
     # Case 5: Empty after manually calling extract_addresses_from_list
-    $resolver = LocalFile->new(aliases => $aliases);
+    $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     $resolver->extract_addresses_from_list('direct@example.com');
     is_deeply($resolver->processed_aliases, {}, 
         'processed_aliases remains empty after extract_addresses_from_list with direct email');
@@ -65,7 +65,7 @@ subtest 'Tracking processed aliases' => sub {
         'simple' => 'test@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     
     # Initial state check
     is_deeply($resolver->processed_aliases, {}, 'processed_aliases starts empty');
@@ -85,7 +85,7 @@ subtest 'Tracking processed aliases' => sub {
 # Test for edge cases
 subtest 'Edge Cases' => sub {
     # Create a resolver with an empty aliases hash
-    my $resolver = LocalFile->new(aliases => {});
+    my $resolver = Mail::Alias::LocalFile->new(aliases => {});
     
     # Check initial state
     is_deeply($resolver->processed_aliases, {}, 'processed_aliases starts empty with empty aliases');

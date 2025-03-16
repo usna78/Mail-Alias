@@ -5,8 +5,8 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::Exception;
-use FindBin qw($Bin);
-use lib "$Bin/../../../../lib";
+# use FindBin qw($Bin);
+# use lib "$Bin/../../../../lib";
 use_ok('Mail::Alias::LocalFile');
 
 # Test 1: Invalid use of 'mta_' prefix as a key in aliases file
@@ -16,7 +16,7 @@ subtest 'Invalid mta_ prefix as key' => sub {
         'mta_postmaster' => 'postmaster@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     
     # Test when explicitly trying to use the mta_ prefixed key
     my $result = $resolver->resolve_recipients(['mta_postmaster']);
@@ -42,7 +42,7 @@ subtest 'Valid mta_ prefix as value' => sub {
         'simple' => 'test2@example.com',
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['hostmaster']);
     
     # 1) Test no warning for valid mta_ usage in values
@@ -68,7 +68,7 @@ subtest 'Direct mta_ prefix - should be skipped' => sub {
         'normal' => 'test@example.com'
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['mta_direct']);
     
     # Direct mta_ prefixed alias should be skipped with warning
@@ -90,7 +90,7 @@ subtest 'Mixed valid and invalid mta_ usages' => sub {
         'mta_invalid' => 'invalid@example.com'
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['valid', 'mta_invalid']);
     
     # Valid usage should work correctly
@@ -113,7 +113,7 @@ subtest 'Mixed direct mta_ prefix with valid alias' => sub {
         'valid' => 'test@example.com'
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['valid', 'mta_direct']);
     
     # Direct mta_ prefix should be skipped with warning
@@ -135,7 +135,7 @@ subtest 'Nested aliases with mta_ prefix in values' => sub {
         'level2' => 'mta_service2, email@example.com'
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['level1']);
     
     # Both mta_ services should be processed
@@ -155,7 +155,7 @@ subtest 'Alias value matching improper mta_ key' => sub {
         'mta_service' => 'service@example.com'  # Improper key
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['valid']);
     
     # The mta_service in valid's value should be processed normally as a service
@@ -176,7 +176,7 @@ subtest 'detect_circular_references with mta_ keys' => sub {
         'mta_bad' => 'bad_value'
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my @circular = $resolver->detect_circular_references($aliases);
     
     # Test warning is generated for mta_ key
@@ -190,7 +190,7 @@ subtest 'Multiple mta_ values in one alias' => sub {
         'multi' => 'mta_service1, mta_service2, email@example.com'
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['multi']);
     
     # Both services should be processed
@@ -209,7 +209,7 @@ subtest 'Multiple direct mta_ prefixed aliases' => sub {
         'normal' => 'test@example.com'
     };
     
-    my $resolver = LocalFile->new(aliases => $aliases);
+    my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $result = $resolver->resolve_recipients(['mta_direct1', 'mta_direct2']);
     
     # All direct mta_ prefixed aliases should be skipped
