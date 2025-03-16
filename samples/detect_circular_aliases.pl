@@ -14,8 +14,8 @@ use Data::Dumper;
 use Getopt::Long;
 use File::Basename;
 
-use FindBin;  # path to this script
-use lib "$FindBin::Bin/../../../"; # path to lib directory
+# use FindBin;  # path to this script
+# use lib "$FindBin::Bin/../../../"; # path to lib directory
 use Mail::Alias::LocalFile;
 
 # Define default values
@@ -105,7 +105,7 @@ else {
 say "Loaded aliases from $alias_file as $format format";
 
 # Create a new resolver object - using Moose-style named parameters
-my $resolver = LocalFile->new( aliases => $aliases );
+my $resolver = Mail::Alias::LocalFile->new( aliases => $aliases );
 
 # Detect and report circular references
 my $circular_refs = $resolver->detect_circular_references($aliases);

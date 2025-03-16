@@ -1,7 +1,0 @@
-*_bak
-*.bak
-*.log
-*_log
-*.tar
-*.tgz
-.gitignore

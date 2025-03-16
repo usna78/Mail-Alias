@@ -1,10 +1,12 @@
-package LocalFile;
+package Mail::Alias::LocalFile;
 
 our $VERSION = '0.01';
 
+use 5.012;
+use strict;
+use warnings;
 use Moo;
 use namespace::autoclean;
-use 5.012;
 use Email::Valid;
 use Scalar::Util qw(reftype);
 use Data::Dumper::Concise;
@@ -389,7 +391,7 @@ __PACKAGE__->meta->make_immutable;
 
 =head1 NAME
 
-LocalFile - A module for resolving email aliases and building recipient lists
+Mail::Alias::LocalFile - A module for resolving email aliases and building recipient lists
 from a locally maintained aliases file. The MTA shared aliases file may stll be
 used when and if desired.
 
@@ -397,7 +399,7 @@ used when and if desired.
 
     use Mail::Alias::LocalFile;
 
-    $resolver = LocalFile->new(aliases => $alias_file_href);
+    $resolver = Mail::Alias::LocalFile->new(aliases => $alias_file_href);
     $result = $resolver->resolve_recipients($intended_recipients_aref);
 
     # Get the final comma-separated list of recipients
@@ -411,7 +413,7 @@ used when and if desired.
 
     You can also detect all circular references in  the local aliases file:
 
-        $resolver = LocalFile->new(aliases => $alias_file_href);
+        $resolver = Mail::Alias::LocalFile->new(aliases => $alias_file_href);
         $circular = $resolver->detect_circular_references($alias_file_ref);
         my @circular_references = @{$circular};
         if ( $circular_references[0] ) {
@@ -420,7 +422,7 @@ used when and if desired.
 
 =head1 DESCRIPTION
 
-The C<LocalFile> module provides functionality to resolve email addresses and aliases into a
+The C<Mail::Alias::LocalFile> module provides functionality to resolve email addresses and aliases into a
 unique list of email recipients. It handles nested aliases, validates email addresses, and
 detects circular references in alias definitions.
 

@@ -1,25 +1,24 @@
 #!/usr/bin/env perl
 
-use 5.010;
-# use 5.36.0;
+use 5.36.0;
+# use 5.010;
 # use strict (automatic since 5.12.0) 
 # use warnings (automatic since 5.16.0) 
 # use feature 'say' (automatic since 5.36.0)
 use YAML::XS qw(LoadFile); 
 use Data::Dumper::Concise;
-use lib '/home/russ/lib';
 use Mail::Alias::LocalFile;
 
 
 # select the desired file for demonstration purposes
-  my $alias_file_path = '/home/russ/lib/Mail/Alias/samples/aliases.yml';
-# my $alias_file_path = '/home/russ/lib/Mail/Alias/samples/aliases.json';
-# my $alias_file_path = '/home/russ/lib/Mail/Alias/samples/good_aliases.yml';
+my $alias_file_path = 'aliases.yml';
+# my $alias_file_path = 'aliases.json';
+# my $alias_file_path = 'good_aliases.yml';
+ 
 my $aliases = load_aliases_file();
 
-
 # Create a new resolver object - using Moo-style named parameters
-my $resolver = LocalFile->new(aliases => $aliases);
+my $resolver = Mail::Alias::LocalFile->new(aliases => $aliases);
 
 # Resolve email addresses
 my @recipients = ();
@@ -42,7 +41,7 @@ my $original_input       = $result->{original_input};
 my $processed_aliases    = $result->{processed_aliases};
 my $uniq_email_addresses = $result->{uniq_email_addresses};
 my $expanded_addresses   = $result->{expanded_addresses};
-my $circular_references   = $result->{circular_references};
+my $circular_references  = $result->{circular_references};
 
 
 say '';
@@ -78,8 +77,6 @@ if ( @$circular_references ) {
   say "result";
   say Dumper( $result );
   say "================ END  ===============================";
-
-
 
 sub load_aliases_file {
 
