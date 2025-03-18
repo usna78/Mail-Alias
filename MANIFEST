@@ -2,7 +2,6 @@ Changes
 lib/Mail/Alias/LocalFile.pm
 LICENSE
 MakeFile.PL
-makeit.pl
 MANIFEST			This list of files
 README.md
 samples/aliases.json
