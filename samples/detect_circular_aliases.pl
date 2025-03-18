@@ -10,7 +10,7 @@ use 5.36.0;
 
 use YAML::XS qw(LoadFile);
 use JSON::XS;
-use Data::Dumper;
+use Data::Dumper::Concise;
 use Getopt::Long;
 use File::Basename;
 
@@ -115,7 +115,6 @@ if (@{$circular_refs}) {
     foreach my $ref (@{$circular_refs}) {
         say "  $ref";
     }
-    print "Circular references detected: ", join("\n", @${circular_refs}), "\n";
 }
 else {
     say "No circular references detected.";

@@ -1,18 +1,15 @@
 #!/usr/bin/env perl
 
-use 5.36.0;
-# use 5.010;
-# use strict (automatic since 5.12.0) 
-# use warnings (automatic since 5.16.0) 
-# use feature 'say' (automatic since 5.36.0)
+use 5.010;
+use strict; # (automatic since 5.12.0) 
+use warnings; # (automatic since 5.16.0) 
+use feature 'say'; # (automatic since 5.36.0)
 use YAML::XS qw(LoadFile); 
 use Data::Dumper::Concise;
 use Mail::Alias::LocalFile;
 
-
 # select the desired file for demonstration purposes
 my $alias_file_path = 'aliases.yml';
-# my $alias_file_path = 'aliases.json';
 # my $alias_file_path = 'good_aliases.yml';
  
 my $aliases = load_aliases_file();
@@ -100,3 +97,127 @@ sub load_aliases_file {
     }
     return ($aliases);
 }
+
+=head1 NAME
+
+expand_aliases.pl - Resolves email aliases from a YAML configuration file
+
+=head1 SYNOPSIS
+
+  ./expand_aliases.pl email@example.com team-alias some-group
+
+=head1 DESCRIPTION
+
+This script expands email aliases defined in a YAML file into a list of actual email addresses.
+It helps in managing mailing lists and group communications by maintaining aliases in a central
+configuration file rather than having to remember individual email addresses.
+
+The script uses the C<Mail::Alias::LocalFile> module to handle the expansion of aliases,
+including detection and warning about circular references.
+
+=head1 REQUIREMENTS
+
+=over 4
+
+=item * Perl 5.10.0 or newer
+
+=item * YAML::XS
+
+=item * Data::Dumper::Concise
+
+=item * Mail::Alias::LocalFile
+
+=back
+
+=head1 CONFIGURATION
+
+The script looks for aliases in a YAML file. By default, it uses 'aliases.yml', but the path
+can be modified by changing the C<$alias_file_path> variable in the script.
+
+Alternative configurations are commented out in the script:
+
+  # my $alias_file_path = 'aliases.json';
+  # my $alias_file_path = 'good_aliases.yml';
+
+=head2 Aliases File Format
+
+The aliases file should be in YAML format with the following structure:
+
+  alias1:
+    - user1@example.com
+    - user2@example.com
+  alias2: user3@example.com, alias1, mta_postmaster
+
+Aliases can refer to other aliases, which will be expanded recursively.
+
+=head1 USAGE
+
+  ./expand_aliases.pl [email addresses and/or aliases...]
+
+=head1 OUTPUT
+
+The script outputs:
+
+=over 4
+
+=item * List of expanded recipients
+
+=item * Warnings about circular references (if any)
+
+=item * Original input list
+
+=item * Detailed debug information (when the debug section is uncommented)
+
+=back
+
+=head1 TROUBLESHOOTING
+
+Debug information can be enabled by uncommenting the troubleshooting section at the end of the script:
+
+  say "=============== START ===============================";
+  say "result";
+  say Dumper( $result );
+  say "================ END  ===============================";
+
+=head1 DIAGNOSTICS
+
+=over 4
+
+=item * C<ERROR: No email recipients and/or aliases were provided>
+
+The script was called without any arguments. You need to provide at least one email address or alias.
+
+=item * C<The aliases.yml file did not load>
+
+There was an error loading the aliases file. Make sure the file exists and contains valid YAML.
+
+=item * C<Warning: the aliases file contains circular references>
+
+The aliases file contains circularity where alias definitions form a loop. This could cause infinite
+recursion if not handled properly.
+
+=back
+
+=head1 EXAMPLES
+
+=over 4
+
+=item * Expand a single alias:
+
+  ./expand_aliases.pl developers
+
+=item * Expand multiple aliases and individual addresses:
+
+  ./expand_aliases.pl developers managers john@example.com
+
+=back
+
+=head1 AUTHOR
+
+Contact the original author for more information about this script.
+
+=head1 SEE ALSO
+
+L<Mail::Alias::LocalFile>, L<YAML::XS>
+
+=cut

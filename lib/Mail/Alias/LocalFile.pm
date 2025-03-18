@@ -9,7 +9,6 @@ use Moo;
 use namespace::autoclean;
 use Email::Valid;
 use Scalar::Util qw(reftype);
-use Data::Dumper::Concise;
 use Types::Standard qw(ArrayRef HashRef Str);
 
 # Class attributes with type constraints
@@ -322,7 +321,8 @@ sub detect_circular_references {
             \@circular_references );
     }
 
-    if ( \@circular_references ) {
+ #  if ( \@circular_references ) {
+    if ( $circular_references[0] ) {
         my @warning = @{ $self->warning };
         push @warning, "ERROR: The aliases file contains entries that are circular references";
         $self->warning( \@warning );
