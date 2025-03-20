@@ -10,6 +10,7 @@ use namespace::autoclean;
 use Email::Valid;
 use Scalar::Util qw(reftype);
 use Types::Standard qw(ArrayRef HashRef Str);
+use Data::Dumper::Concise;
 
 # Class attributes with type constraints
 
@@ -94,6 +95,11 @@ sub resolve_recipients {
     my @all_recipients = ( @{$uniq_email_recipients}, @{$self->mta_aliases} );
     my $recipients = join( ',', @all_recipients );
 
+    # warn if there are no recipients (all were bad email addresses)
+    if ($recipients eq "" ) {
+        push @{ $self->warning }, "ERROR, There are no valid email addresses";
+    }
+
     my %result;
     $result{expanded_addresses}   = $self->expanded_addresses;
     $result{uniq_email_addresses} = $self->uniq_email_addresses;
@@ -107,7 +113,6 @@ sub resolve_recipients {
 
     $result{circular_references} = $circular_references; 
     $result{warning}              = $self->warning;
-
     return \%result;
 }
 
@@ -176,40 +181,30 @@ sub process_mta_alias {
 sub process_potential_email {
     my ( $self, $item ) = @_;
 
-    my @warning = @{ $self->warning };
+    # Normalize and validate the email address
+    $item = lc($item);
 
-    # Check if it has exactly one @ symbol
-    my @count = $item =~ /@/xg;
-    if ( scalar @count == 1 ) {
-
-        # Normalize and validate the email address
-        $item = lc($item);
-        my $address = Email::Valid->address($item);
+    my $address = Email::Valid->address($item);
+    # if it was a bad email format, $address is not defined
+    if ( !defined $address ) {
+        push @{ $self->warning}, 
+	"ERROR: $item is not a correctly formatted email address, skipping";
+    }
+    else {
         if ($address) {
             push @{ $self->expanded_addresses }, $address;
         }
-        else {
-            push @warning,
-"ERROR: $item is not a correctly formatted email address, skipping";
-        }
     }
-    else {
-        push @warning,
-          "ERROR $item is not a correctly formatted email address, skipping";
-    }
-    $self->warning( \@warning );
     return;
 }
 
 sub process_potential_alias {
     my ( $self, $alias ) = @_;
-    my @warning           = @{ $self->warning };
     my $processed_aliases = $self->processed_aliases;
 
     # Check if this alias exists
     if ( !exists $self->aliases->{$alias} ) {
-        push @warning, "ERROR: The alias $alias was not found, skipping.";
-        $self->warning( \@warning );
+        push @{ $self->warning }, "ERROR: The alias $alias was not found, skipping.";
         return;
     }
 
@@ -228,12 +223,10 @@ sub process_potential_alias {
         my @values = @{ $self->aliases->{$alias} };
         my $string = join( ",", @values );
 
-        #  $processed_aliases->{$alias} = $string;
         $processed_aliases->{$alias} = 'Processed';
     }
     else {
         # already a string, just use it as the value
-        #  $processed_aliases->{$alias} = $self->aliases->{$alias};
         $processed_aliases->{$alias} = 'Processed';
     }
 
@@ -241,8 +234,6 @@ sub process_potential_alias {
 
     # Expand the alias
     $self->expand_alias($alias);
-
-    $self->warning( \@warning );
     return;
 }
 
@@ -321,7 +312,6 @@ sub detect_circular_references {
             \@circular_references );
     }
 
- #  if ( \@circular_references ) {
     if ( $circular_references[0] ) {
         my @warning = @{ $self->warning };
         push @warning, "ERROR: The aliases file contains entries that are circular references";
