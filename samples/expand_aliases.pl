@@ -52,7 +52,7 @@ if ( @$circular_references ) {
 
 }
 
-  if ( @$warning ) {
+if ( @$warning ) {
     say '';
     say 'warning';
     foreach my $item ( @{$warning} ) {
@@ -70,10 +70,10 @@ if ( @$circular_references ) {
 }
 
 # uncomment for troubleshooting
-  say "=============== START ===============================";
-  say "result";
-  say Dumper( $result );
-  say "================ END  ===============================";
+# say "=============== START ===============================";
+# say "result";
+# say Dumper( $result );
+# say "================ END  ===============================";
 
 sub load_aliases_file {
 

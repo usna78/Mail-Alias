@@ -41,7 +41,7 @@ subtest 'Email Validation' => sub {
     $resolver->warning([]);             # Reset
     $resolver->process_potential_email('invalid@email@example.com');
     is($resolver->warning->[0], 
-   'ERROR invalid@email@example.com is not a correctly formatted email address, skipping', 
+   'ERROR: invalid@email@example.com is not a correctly formatted email address, skipping', 
    'Warning generated for invalid email');
 
     # Test case normalization
