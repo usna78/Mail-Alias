@@ -9,8 +9,8 @@ use Data::Dumper::Concise;
 use Mail::Alias::LocalFile;
 
 # select the desired file for demonstration purposes
-my $alias_file_path = 'aliases.yml';
-# my $alias_file_path = 'good_aliases.yml';
+#  my $alias_file_path = 'aliases.yml'; # has intentional circular references
+my $alias_file_path = 'good_aliases.yml'; # an example with all good entrires
  
 my $aliases = load_aliases_file();
 
