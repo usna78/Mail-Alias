@@ -437,28 +437,29 @@ Alias keys with the 'mta_' prefix are not allowed and will be skipped with a war
     my $result     = $resolver->resolve_recipients([ bill@example.com group2 system ]);
     my $recipients = $result->{recipients};
 
-    The recipients email addresses to pass to your email  is:der 'To: ' field is:
+    The recipients email addresses to pass to your email client code is:
         'bill@example.com,mary@example,com,joe@example.com,postmaster'
 
 	group2 and mta_postmaster are expanded from the local aliases file
 	and the postmaster alias will expand from  the system wide aliases file
 
-=head1 Return Value output ( $result )
-Returns a hash_ref:
+=head1 OUTPUT 
+    Returns a hash_ref:
 
-    $result{expanded_addresses}
-    $result{uniq_email_addresses}
-    $result{recipients} 
-    $result{original_input}
-    $result{warning}
-    $result{aliases}
-    $result{processed_aliases}
-    $result{mta_aliases}
+        $result{recipients} 
+        $result{warning}
+        $result{original_input}
+        $result{aliases}
+        $result{processed_aliases}
+        $result{expanded_addresses}
+        $result{uniq_email_addresses}
+        $result{mta_aliases}
 
 Where $result{recipients} is the comma separated expanded email addresses and MTA aliases
-suitable for use in to To: field of your email generation code
+suitable for use in the To: field of your email code
 
-Other available result keys are useful for troubleshooting
+Always check $result{warning} to identify problems encountered, if any.
+The other available result values are useful for troubleshooting
 
 =head1 ATTRIBUTES
 
@@ -471,34 +472,44 @@ An array reference storing warning messages generated during processing.
 
 =head2 aliases
 
-A hash reference mapping alias names to their values (either strings or array references).
-This attribute is required when creating a new instance.
+A hash reference mapping alias names to their values (either strings or array 
+references). This attribute is required when creating a new instance. It is 
+provided from your application after your application loads a locally 
+maintained aliases file.
 
+    my $resolver   = Mail::Alias::LocalFile->new(aliases => $aliases);
     my $aliases = $resolver->aliases;
+
+    This is how Perl sees your local alias file data for parsing.
 
 =head2 expanded_addresses
 
-An array reference containing all expanded email addresses (including duplicates).
+An array reference containing the cumulative expanded email addresses (including 
+duplicates as each item from the input is expanded
 
     my $all_addresses = $resolver->expanded_addresses;
 
+    For troubleshooting if your result is not as expected.
+
 =head2 addresses_and_aliases
 
-An array reference containing the current working list of addresses and aliases
-being processed.
+An array reference.  A working copy of the original_input that is consumed
+by shift, to provide each item of the array for analysis. 
 
-    $resolver->addresses_and_aliases(['team', 'support@example.com']);
 
 =head2 original_input
 
 An array reference containing the original input provided to C<resolve_recipients>.
 
+    my $result     = $resolver->resolve_recipients([ bill@example.com group2 system ]);
     my $original = $resolver->original_input;
+
+    Stored for troubleshooting purposes, if needed.
 
 =head2 processed_aliases
 
-A hash reference tracking which aliases have been processed to avoid duplicate
-processing.
+A hash reference tracking which aliases have been processed and used to avoid 
+duplicate processing and suppress circular references (if any).
 
     my $processed = $resolver->processed_aliases;
 
@@ -511,8 +522,11 @@ expansion and deduplication.
 
 =head2 mta_aliases
 
-An array reference containing aliases that should be passed to the MTA for expansion
-after the 'mta_' prefix has been removed.
+An array reference containing aliases that should be passed to the MTA for 
+expansion after the 'mta_' prefix has been removed. Not used unless the local 
+alias has a value containing an alias with the mta_ prefix. The mta_ prefix
+must be used in order to pass an alias through for expansion by the MTA alias
+file.
 
     my $mta_aliases = $resolver->mta_aliases;
 
@@ -625,7 +639,7 @@ Internal function to process individual items when checking for circular referen
 
 =head1 AUTHOR
 
-Russ Brewer (RBREW)
+Russ Brewer (RBREW) rbrew@cpan.org
 
 =head1 VERSION
 
@@ -635,7 +649,7 @@ Russ Brewer (RBREW)
 
 =over 4
 
-=item * Email::Valid
+=item * Email::Valid->address
 
 =item * Moo
 

@@ -70,10 +70,10 @@ if ( @$warning ) {
 }
 
 # uncomment for troubleshooting
-# say "=============== START ===============================";
-# say "result";
-# say Dumper( $result );
-# say "================ END  ===============================";
+  say "=============== START ===============================";
+  say "result";
+  say Dumper( $result );
+  say "================ END  ===============================";
 
 sub load_aliases_file {
 

@@ -5,6 +5,11 @@ use warnings;
 use Test::More;
 use Symbol qw(qualify_to_ref);
 
+# Test::Pod::Coverage
+# Pod::Coverage
+#     most end users dont need these tests 
+#     but contributers should ensure POD coverage is complete
+
 # Plan tests
 plan tests => 2;  # require_ok + pod_coverage_ok
 
